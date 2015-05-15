@@ -26,12 +26,21 @@ import static com.google.common.base.Strings.repeat;
 import static java.util.Collections.emptyList;
 
 import java.util.List;
+import java.util.Locale;
+
+import org.simmetrics.simplifiers.Normalizer;
 
 /**
  * Basic Q-Gram tokenizer for a variable Q.The Q-Gram is extended beyond the
  * length of the string with padding.
  * <p>
+ * Note: a Q-Gram consists of q code points. When working with non-ASCII
+ * characters, similar strings should be in the same a normalized form to
+ * produce similar tokens.
+ * <p>
  * This class is immutable and thread-safe.
+ * 
+ * @see Normalizer
  */
 public class QGramExtended extends AbstractTokenizer {
 
@@ -44,7 +53,32 @@ public class QGramExtended extends AbstractTokenizer {
 	private final QGram tokenizer;
 
 	/**
-	 * Constructs a q-gram tokenizer with the given q and padding.
+	 * Constructs a q-gram tokenizer with the given q, default padding and
+	 * default locale.
+	 * 
+	 * @param q
+	 *            size of the tokens
+	 */
+	public QGramExtended(int q) {
+		this(q, Locale.getDefault());
+	}
+
+	/**
+	 * Constructs a q-gram tokenizer with the given q, default padding and the
+	 * given locale.
+	 * 
+	 * @param q
+	 *            size of the tokens
+	 * @param locale
+	 *            locale used to determine grapheme boundaries
+	 */
+	public QGramExtended(int q, Locale locale) {
+		this(q, DEFAULT_START_PADDING, DEFAULT_END_PADDING, locale);
+	}
+
+	/**
+	 * Constructs a q-gram tokenizer with the given q, padding and default
+	 * locale.
 	 * 
 	 * @param q
 	 *            size of the tokens
@@ -54,22 +88,29 @@ public class QGramExtended extends AbstractTokenizer {
 	 *            padding to apply at the end of short tokens
 	 */
 	public QGramExtended(int q, String startPadding, String endPadding) {
-		checkArgument(!startPadding.isEmpty(), "startPadding may not be empty");
-		checkArgument(!endPadding.isEmpty(), "endPadding may not be empty");
-
-		this.tokenizer = new QGram(q);
-		this.startPadding = repeat(startPadding, q - 1);
-		this.endPadding = repeat(endPadding, q - 1);
+		this(q, startPadding, endPadding, Locale.getDefault());
 	}
 
 	/**
-	 * Constructs a q-gram tokenizer with the given q and default padding.
+	 * Constructs a q-gram tokenizer with the given q, padding and locale.
 	 * 
 	 * @param q
 	 *            size of the tokens
+	 * @param startPadding
+	 *            padding to apply at the start of short tokens
+	 * @param endPadding
+	 *            padding to apply at the end of short tokens
+	 * @param locale
+	 *            locale used to determine grapheme boundaries
 	 */
-	public QGramExtended(int q) {
-		this(q, DEFAULT_START_PADDING, DEFAULT_END_PADDING);
+	public QGramExtended(int q, String startPadding, String endPadding,
+			Locale locale) {
+		checkArgument(!startPadding.isEmpty(), "startPadding may not be empty");
+		checkArgument(!endPadding.isEmpty(), "endPadding may not be empty");
+
+		this.tokenizer = new QGram(q, locale);
+		this.startPadding = repeat(startPadding, q - 1);
+		this.endPadding = repeat(endPadding, q - 1);
 	}
 
 	/**

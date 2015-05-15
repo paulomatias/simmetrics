@@ -23,33 +23,66 @@
 package org.simmetrics.tokenizers;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.text.Normalizer.normalize;
+import static java.text.Normalizer.Form.NFD;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.text.BreakIterator.getCharacterInstance;
 
+import java.text.BreakIterator;
 import java.util.ArrayList;
+import java.util.Locale;
+
+import static java.util.Arrays.copyOfRange;
+
 import java.util.List;
+
+import org.simmetrics.simplifiers.Normalizer;
 
 /**
  * Basic Q-Gram tokenizer for a variable q. Returns a list with the original
  * input for tokens shorter then q.
  * <p>
+ * Note: a Q-Gram consists of q code points. When working with non-ASCII
+ * characters, similar strings should be in the same a normalized form to
+ * produce similar tokens. 
+ * <p>
  * This class is immutable and thread-safe.
+ * 
+ * @see Normalizer
  *
  */
 public class QGram extends AbstractTokenizer {
 
-	private final int q;
+	private final BreakIterator head;
+	private final BreakIterator tail;
 
+	private final int q;
 	/**
-	 * Constructs a q-gram tokenizer with the given q.
+	 * Constructs a q-gram tokenizer with the given q and default locale
 	 * 
 	 * @param q
 	 *            size of the tokens
+	
 	 */
 
 	public QGram(int q) {
+		this(q,Locale.getDefault());
+	}
+	/**
+	 * Constructs a q-gram tokenizer with the given q and locale
+	 * 
+	 * @param q
+	 *            size of the tokens
+	 * @param locale
+	 *            locale used to determine grapheme boundaries
+	 */
+
+	public QGram(int q, Locale locale) {
 		checkArgument(q > 0, "q must be greater then 0");
 		this.q = q;
+		this.head = getCharacterInstance(locale);
+		this.tail = getCharacterInstance(locale);
 	}
 
 	/**
@@ -62,20 +95,25 @@ public class QGram extends AbstractTokenizer {
 	}
 
 	@Override
-	public List<String> tokenizeToList(final String input) {
+	public List<String> tokenizeToList(String input) {
 		if (input.isEmpty()) {
 			return emptyList();
 		}
 
-		if (input.length() <= q) {
+		if (input.codePointCount(0, input.length()) < q) {
 			return singletonList(input);
 		}
 
 		final List<String> ret = new ArrayList<>(input.length());
 
-		for (int i = 0; i < input.length() - q + 1; i++) {
-			ret.add(input.substring(i, i + q));
-		}
+		head.setText(input);
+		tail.setText(input);
+		head.next(q);
+
+		do {
+			ret.add(input.substring(tail.current(), head.current()));
+			tail.next();
+		} while (head.next() != BreakIterator.DONE);
 
 		return ret;
 	}

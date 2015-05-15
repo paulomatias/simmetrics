@@ -19,31 +19,35 @@
  * You should have received a copy of the GNU General Public License along with
  * SimMetrics. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.simmetrics.tokenizers;
+package org.simmetrics.metrics;
 
-import org.simmetrics.tokenizers.Tokenizer;
+import org.simmetrics.ListMetric;
+import org.simmetrics.SetMetric;
+import org.simmetrics.StringMetric;
 
-public class QGram2TokenizerTest extends TokenizerTest {
+public abstract class Equality {
 
-	@Override
-	protected Tokenizer getTokenizer() {
-		return new QGram(2);
+	public static class String implements StringMetric {
+
+		@Override
+		public float compare(java.lang.String a, java.lang.String b) {
+			return a.equals(b) ? 1 : 0;
+		}
 	}
 
-	@Override
-	public T[] getTests() {
+	public static class List<T> implements ListMetric<T> {
 
-		return new T[] {
-				new T(""),
-				new T("1", "1"),
-				new T("12", "12"),
-				new T("123456789",
-				// Expected output
-						"12", "23", "34", "45", "56", "67", "78", "89"),
-				new T("123456789123456789",
-						// Expected output
-						"12", "23", "34", "45", "56", "67", "78", "89", "91",
-						"12", "23", "34", "45", "56", "67", "78", "89"),
-		};
+		@Override
+		public float compare(java.util.List<T> a, java.util.List<T> b) {
+			return a.equals(b) ? 1 : 0;
+		}
+	}
+
+	public static class Set<T> implements SetMetric<T> {
+
+		@Override
+		public float compare(java.util.Set<T> a, java.util.Set<T> b) {
+			return a.equals(b) ? 1 : 0;
+		}
 	}
 }
