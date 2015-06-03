@@ -41,9 +41,9 @@ import org.simmetrics.simplifiers.Normalizer;
 
 /**
  * Basic Q-Gram tokenizer for a variable q. Returns a list with the original
- * input for tokens shorter then q.
+ * input for tokens shorter then q. A q-gram consists of q-graphemes.
  * <p>
- * Note: a Q-Gram consists of q code points. When working with non-ASCII
+ * Note: a Q-Gram consists of q graphemes. When working with non-ASCII
  * characters, similar strings should be in the same a normalized form to
  * produce similar tokens. 
  * <p>
